@@ -18,7 +18,7 @@ const Login = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#5EB7E5]">
-            <h1 className="text-5xl font-bold font-serif text-black mb-10">tiffany</h1>
+            <h1 className="text-5xl font-bold font-serif text-black mb-10">Tiffany</h1>
             <form className="flex flex-col items-center space-y-4" onSubmit={handleLogin}>
                 <div className="flex flex-col items-start w-64">
                     <label htmlFor="username" className="text-white text-xs font-bold tracking-wide mb-1">
