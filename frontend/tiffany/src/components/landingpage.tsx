@@ -8,7 +8,7 @@ const LandingPage = () => {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0B2B50] text-white flex flex-col p-6 space-y-4">
-        <h2 className="text-2xl font-bold mb-6">Tiffany</h2>
+        <h2 className="text-2xl font-bold mb-6 bg-white p-2 rounded-lg text-blue-800 justify-center flex">Tiffany</h2>
         <NavLink to="/admin/dashboard" className={({ isActive }) => `${navLinkClass} ${isActive ? "bg-blue-800" : ""}` } > Dashboard </NavLink>
         <NavLink to="/admin/products" className={({ isActive }) => `${navLinkClass} ${isActive ? "bg-blue-800" : ""}` } > Products </NavLink>
         <NavLink to="/admin/inventory" className={({ isActive }) => `${navLinkClass} ${isActive ? "bg-blue-800" : ""}` } > Inventory </NavLink>

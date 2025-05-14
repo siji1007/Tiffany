@@ -1,8 +1,25 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 const Login = () => {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const navigate = useNavigate();
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (username === "admin" && password === "admin") {
+            navigate("/admin/dashboard");
+        } else {
+            alert("Invalid credentials");
+        }
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#5EB7E5]">
             <h1 className="text-5xl font-bold font-serif text-black mb-10">tiffany</h1>
-            <form className="flex flex-col items-center space-y-4">
+            <form className="flex flex-col items-center space-y-4" onSubmit={handleLogin}>
                 <div className="flex flex-col items-start w-64">
                     <label htmlFor="username" className="text-white text-xs font-bold tracking-wide mb-1">
                         USERNAME
@@ -10,7 +27,9 @@ const Login = () => {
                     <input
                         type="text"
                         id="username"
-                        className="w-full px-3 py-2 rounded border  outline-none"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full px-3 py-2 rounded border outline-none"
                     />
                 </div>
 
@@ -21,6 +40,8 @@ const Login = () => {
                     <input
                         type="password"
                         id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="w-full px-3 py-2 rounded border outline-none"
                     />
                 </div>
