@@ -24,7 +24,7 @@ const Product = () => {
     };
 
     const handlePurchase = async (product) => {
-        alert(`Selected Product ID: ${product.product_id}`);
+        alert(`Selected Product Name: ${product.product_name}`);
 
         const qty = quantities[product.product_id];
         if (qty < 1 || qty > product.product_quantity) {
@@ -34,7 +34,7 @@ const Product = () => {
 
         try {
             const res = await axios.post("http://localhost:3001/api/purchase", {
-                product_id: product.product_id,
+                product_name: product.product_name,
                 quantity: qty,
             });
 
@@ -59,7 +59,7 @@ const Product = () => {
 />
                         <h2 className="text-lg font-semibold">{product.product_name}</h2>
                         <p className="text-sm text-gray-600">Price: ₱{product.product_price}</p>
-                        <p className="text-sm text-gray-600">Available: {product.product_quantity}</p>
+                        <p className="text-sm text-gray-600">Quantity: {product.product_quantity}</p>
                         <input
                             type="number"
                             min={1}

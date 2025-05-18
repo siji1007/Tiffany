@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 18, 2025 at 09:45 AM
+-- Generation Time: May 18, 2025 at 11:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `product` (
   `product_id` int(11) NOT NULL,
   `product_name` varchar(255) NOT NULL,
   `product_price` decimal(10,2) NOT NULL,
-  `product_quantity` int(11) NOT NULL,
+  `product_stocks` int(11) DEFAULT NULL,
   `product_image` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -39,12 +39,17 @@ CREATE TABLE `product` (
 -- Dumping data for table `product`
 --
 
-INSERT INTO `product` (`product_id`, `product_name`, `product_price`, `product_quantity`, `product_image`) VALUES
-(1, 'Sachet Coffee', 299.99, 50, 'src\\assets\\coffee.jpg'),
-(2, 'Gin Bilog', 899.50, 30, 'src\\assets\\Gin.jpg'),
-(3, 'Marlboro', 499.00, 100, 'src\\assets\\Marlboro-1.png'),
-(4, 'Softdrinks', 299.00, 75, 'src\\assets\\softdrinks.jpg'),
-(5, 'Tang Juice', 59.75, 200, 'src\\assets\\tang.jpg');
+INSERT INTO `product` (`product_id`, `product_name`, `product_price`, `product_stocks`, `product_image`) VALUES
+(1, 'Premium Rice', 1200.00, 99, 'https://via.placeholder.com/150?text=Premium+Rice'),
+(2, 'Brown Sugar', 480.00, 70, 'https://via.placeholder.com/150?text=Brown+Sugar'),
+(3, 'Cooking Oil', 600.00, 60, 'https://via.placeholder.com/150?text=Cooking+Oil'),
+(4, 'All-Purpose Flour', 450.00, 75, 'https://via.placeholder.com/150?text=All-Purpose+Flour'),
+(5, 'Iodized Salt', 150.00, 90, 'https://via.placeholder.com/150?text=Iodized+Salt'),
+(6, 'Soy Sauce', 540.00, 50, 'https://via.placeholder.com/150?text=Soy+Sauce'),
+(7, 'Canned Sardines', 950.00, 120, 'https://via.placeholder.com/150?text=Canned+Sardines'),
+(8, 'Evaporated Milk', 1680.00, 40, 'https://via.placeholder.com/150?text=Evaporated+Milk'),
+(9, 'Instant Noodles', 1200.00, 200, 'https://via.placeholder.com/150?text=Instant+Noodles'),
+(10, 'Coffee Sachets', 1000.00, 150, 'https://via.placeholder.com/150?text=Coffee+Sachets');
 
 --
 -- Indexes for dumped tables
@@ -64,7 +69,7 @@ ALTER TABLE `product`
 -- AUTO_INCREMENT for table `product`
 --
 ALTER TABLE `product`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

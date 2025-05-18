@@ -26,10 +26,10 @@ async function connectRabbitMQ() {
 connectRabbitMQ();
 
 app.post('/api/purchase', async (req, res) => {
-  const { product_id, quantity } = req.body;
+  const { product_name, quantity } = req.body;
 
-  if (!product_id || !quantity) {
-    return res.status(400).json({ error: 'Missing product_id or quantity' });
+  if (!product_name || !quantity) {
+    return res.status(400).json({ error: 'Missing product_name or quantity' });
   }
 
   if (quantity < 1) {
@@ -37,14 +37,74 @@ app.post('/api/purchase', async (req, res) => {
   }
 
   try {
-    const msg = JSON.stringify({ product_id, quantity });
-    channel.sendToQueue(QUEUE_NAME, Buffer.from(msg), { persistent: true });
-    console.log(`Sent message to queue: ${msg}`);
+    // Start a transaction to safely update stock and send message
+    connection.beginTransaction((err) => {
+      if (err) {
+        console.error('❌ Transaction start error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
 
-    res.json({ status: 'Purchase successful' });
+      // 1. Fetch current product info and stocks
+      connection.query(
+        'SELECT product_name, product_price, product_stocks FROM product WHERE product_name = ? FOR UPDATE',
+        [product_name],
+        (err, results) => {
+          if (err || results.length === 0) {
+            connection.rollback(() => {});
+            console.error('❌ Error fetching product:', err);
+            return res.status(404).json({ error: 'Product not found' });
+          }
+
+          const product = results[0];
+
+          if (product.product_stocks < quantity) {
+            connection.rollback(() => {});
+            return res.status(400).json({ error: 'Not enough stock available' });
+          }
+
+          const newStock = product.product_stocks - quantity;
+
+          // 2. Update the stock in producer DB
+          connection.query(
+            'UPDATE product SET product_stocks = ? WHERE product_name = ?',
+            [newStock, product_name],
+            (err, updateResult) => {
+              if (err) {
+                connection.rollback(() => {});
+                console.error('❌ Error updating stock:', err);
+                return res.status(500).json({ error: 'Failed to update stock' });
+              }
+
+              // 3. Commit the transaction
+              connection.commit((err) => {
+                if (err) {
+                  connection.rollback(() => {});
+                  console.error('❌ Transaction commit failed:', err);
+                  return res.status(500).json({ error: 'Transaction failed' });
+                }
+
+                // 4. Prepare message with updated stock
+                const msg = JSON.stringify({
+                  product_name: product.product_name,
+                  product_price: product.product_price,
+                  product_stocks: newStock,
+                });
+
+                // 5. Send message to RabbitMQ
+                channel.sendToQueue(QUEUE_NAME, Buffer.from(msg), { persistent: true });
+                console.log(`📤 Sent to queue: ${msg}`);
+
+                // 6. Respond success
+                res.json({ status: 'Purchase processed and synced' });
+              });
+            }
+          );
+        }
+      );
+    });
   } catch (err) {
-    console.error('Failed to send message to RabbitMQ:', err);
-    res.status(500).json({ error: 'Failed to process purchase' });
+    console.error('❌ Purchase processing failed:', err);
+    res.status(500).json({ error: 'Failed to process request' });
   }
 });
 
