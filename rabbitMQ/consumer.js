@@ -33,7 +33,7 @@ async function startConsumer() {
       msg => {
         if (msg !== null) {
           const product = JSON.parse(msg.content.toString());
-          console.log('📥 Received:', product);
+          console.log('📥 Received: Product ID:', product.product_id, ', Stock:', product.product_stocks);
 
           const updateQuery = `
             UPDATE olsmg_product
@@ -51,7 +51,8 @@ async function startConsumer() {
                 return;
               }
 
-              console.log(`✅ Updated stock for ${product.product_name}`);
+              // ✅ Only show product_id and stock in logs
+              console.log(`✅ Product ID: ${product.product_id}, New Stock: ${product.product_stocks}`);
               channel.ack(msg);
             }
           );
@@ -59,6 +60,7 @@ async function startConsumer() {
       },
       { noAck: false }
     );
+
   } catch (err) {
     console.error('❌ RabbitMQ consumer error:', err);
   }

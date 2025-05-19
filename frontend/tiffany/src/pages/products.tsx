@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Default from '../assets/images.jpg'
 
 
 const Product = () => {
@@ -23,27 +24,27 @@ const Product = () => {
         setQuantities({ ...quantities, [id]: value });
     };
 
-    const handlePurchase = async (product) => {
-        alert(`Selected Product Name: ${product.product_name}`);
+  const handlePurchase = async (product) => {
+    const qty = quantities[product.product_id];
+    if (qty < 1 || qty > product.product_quantity) {
+        alert("Please enter a valid quantity.");
+        return;
+    }
 
-        const qty = quantities[product.product_id];
-        if (qty < 1 || qty > product.product_quantity) {
-            alert("Please enter a valid quantity.");
-            return;
-        }
+    try {
+        const res = await axios.post("http://localhost:3001/api/purchase", {
+        product_id: product.product_id,   // Pass product_id
+        product_name:product.product_name,
+        quantity: qty,
+        });
 
-        try {
-            const res = await axios.post("http://localhost:3001/api/purchase", {
-                product_name: product.product_name,
-                quantity: qty,
-            });
-
-            alert(`✅ Purchase successful! Product ID: ${product.product_id} Quantity: ${qty}`);
-                } catch (error) {
-                    console.error("Purchase failed:", error.response?.data || error.message);
-                    alert(`❌ Purchase failed. Please try again.\nError: ${error.response?.data?.error || error.message}`);
-                }
+        alert(`✅ Purchase successful! Product ID: ${product.product_id} Quantity: ${qty}`);
+    } catch (error) {
+        console.error("Purchase failed:", error.response?.data || error.message);
+        alert(`❌ Purchase failed. Please try again.\nError: ${error.response?.data?.error || error.message}`);
+    }
     };
+
 
 
     return (
@@ -53,7 +54,7 @@ const Product = () => {
                 {products.map((product) => (
                     <div key={product.product_id} className="bg-white rounded-lg shadow-md p-4">
                        <img
-                        src={`/${product.product_image}`} // product.product_image = 'assets/Gin.jpg'
+                        src={Default} // product.product_image = 'assets/Gin.jpg'
                         alt={product.product_name}
                         className="w-full h-40 object-cover rounded-md mb-4"
 />

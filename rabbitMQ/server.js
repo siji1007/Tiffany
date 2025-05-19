@@ -1,7 +1,7 @@
 const amqp = require('amqplib');
 const express = require('express');
 const cors = require('cors');
-const connection = require('./connection'); // Your DB connection module
+const connection = require('./connection');
 
 const RABBITMQ_URL = 'amqp://localhost';
 const QUEUE_NAME = 'web-to-db';
@@ -26,28 +26,25 @@ async function connectRabbitMQ() {
 connectRabbitMQ();
 
 app.post('/api/purchase', async (req, res) => {
-  const { product_name, quantity } = req.body;
+  const { product_id, quantity } = req.body;
 
-  if (!product_name || !quantity) {
-    return res.status(400).json({ error: 'Missing product_name or quantity' });
+  if (!product_id || !quantity) {
+    return res.status(400).json({ error: 'Missing product_id or quantity' });
   }
-
   if (quantity < 1) {
     return res.status(400).json({ error: 'Quantity must be at least 1' });
   }
 
   try {
-    // Start a transaction to safely update stock and send message
-    connection.beginTransaction((err) => {
+    connection.beginTransaction(err => {
       if (err) {
         console.error('❌ Transaction start error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      // 1. Fetch current product info and stocks
       connection.query(
-        'SELECT product_name, product_price, product_stocks FROM product WHERE product_name = ? FOR UPDATE',
-        [product_name],
+        'SELECT product_id, product_name, product_price, product_stocks FROM product WHERE product_id = ? FOR UPDATE',
+        [product_id],
         (err, results) => {
           if (err || results.length === 0) {
             connection.rollback(() => {});
@@ -64,10 +61,9 @@ app.post('/api/purchase', async (req, res) => {
 
           const newStock = product.product_stocks - quantity;
 
-          // 2. Update the stock in producer DB
           connection.query(
-            'UPDATE product SET product_stocks = ? WHERE product_name = ?',
-            [newStock, product_name],
+            'UPDATE product SET product_stocks = ? WHERE product_id = ?',
+            [newStock, product_id],
             (err, updateResult) => {
               if (err) {
                 connection.rollback(() => {});
@@ -75,26 +71,28 @@ app.post('/api/purchase', async (req, res) => {
                 return res.status(500).json({ error: 'Failed to update stock' });
               }
 
-              // 3. Commit the transaction
-              connection.commit((err) => {
+              connection.commit(err => {
                 if (err) {
                   connection.rollback(() => {});
                   console.error('❌ Transaction commit failed:', err);
                   return res.status(500).json({ error: 'Transaction failed' });
                 }
 
-                // 4. Prepare message with updated stock
-                const msg = JSON.stringify({
-                  product_name: product.product_name,
-                  product_price: product.product_price,
-                  product_stocks: newStock,
-                });
+                // Send message **only after commit succeeds**
+                if (channel) {
+                  const msg = JSON.stringify({
+                    product_id: product.product_id,
+                    product_name: product.product_name,
+                    product_price: product.product_price,
+                    product_stocks: newStock,
+                    product_quantity: quantity,
+                  });
+                  channel.sendToQueue(QUEUE_NAME, Buffer.from(msg), { persistent: true });
+                  console.log(`📤 Sent to queue: ${msg}`);
+                } else {
+                  console.error('❌ RabbitMQ channel not initialized');
+                }
 
-                // 5. Send message to RabbitMQ
-                channel.sendToQueue(QUEUE_NAME, Buffer.from(msg), { persistent: true });
-                console.log(`📤 Sent to queue: ${msg}`);
-
-                // 6. Respond success
                 res.json({ status: 'Purchase processed and synced' });
               });
             }
@@ -107,6 +105,7 @@ app.post('/api/purchase', async (req, res) => {
     res.status(500).json({ error: 'Failed to process request' });
   }
 });
+
 
 app.get("/api/products", (req, res) => {
   connection.query("SELECT * FROM product", (err, results) => {
